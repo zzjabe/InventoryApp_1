@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Description: >
+  SAM Template to create a DynamoDB table and an API with Lambda functions for CRUD operations.
+
+Parameters:
+  StageName:
+    Type: String
+    Default: dev
+    Description: The deployment stage of the API Gateway
+
+Globals:
+  Function:
+    Runtime: python3.10
+    Timeout: 10
+    MemorySize: 128
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref InventoryTable
+
+Resources:
+  InventoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: SAM-Inventory
+      BillingMode: PAY_PER_REQUEST
+  
+      AttributeDefinitions:
+        - AttributeName: _id
+          AttributeType: S
+        - AttributeName: location_id
+          AttributeType: S
+  
+      KeySchema:
+        - AttributeName: _id
+          KeyType: HASH
+  
+      GlobalSecondaryIndexes:
+        - IndexName: GSI_Location_id
+          KeySchema:
+            - AttributeName: location_id
+              KeyType: HASH
+            - AttributeName: _id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  AddInventoryItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: inventory/add_inventory_item.lambda_handler
+      Role: arn:aws:iam::554385677147:role/LabRole
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /inventory
+            Method: POST
+            RestApiId:
+              Ref: InventoryApi
+
+  GetAllInventoryItemsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: inventory/get_all_inventory_items.lambda_handler
+      Role: arn:aws:iam::554385677147:role/LabRole
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /inventory
+            Method: GET
+            RestApiId:
+              Ref: InventoryApi
+
+  GetInventoryItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: inventory/get_inventory_item.lambda_handler
+      Role: arn:aws:iam::554385677147:role/LabRole
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /inventory/{id}
+            Method: GET
+            RestApiId:
+              Ref: InventoryApi
+
+  DeleteInventoryItemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: inventory/delete_inventory_item.lambda_handler
+      Role: arn:aws:iam::554385677147:role/LabRole
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /inventory/{id}
+            Method: DELETE
+            RestApiId:
+              Ref: InventoryApi
+              
+  GetLocationInventoryItemsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: inventory/get_location_inventory_items.lambda_handler
+      Role: arn:aws:iam::554385677147:role/LabRole
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /inventory/location/{location_id}
+            Method: GET
+            RestApiId:
+              Ref: InventoryApi
+
+  InventoryApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: InventoryApi
+      StageName: !Ref StageName
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${InventoryApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/"

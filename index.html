@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+        }
+        input, button {
+            padding: 6px;
+            margin: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 8px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+<h1>Inventory Dashboard</h1>
+
+<script>
+    const API_BASE = "https://ctvwkqm35j.execute-api.us-east-1.amazonaws.com/dev";
+
+    async function fetchAll() {
+        const res = await fetch(`${API_BASE}/inventory`);
+        const data = await res.json();
+        renderTable(data);
+    }
+
+    async function fetchById() {
+        const id = document.getElementById("idInput").value;
+        const res = await fetch(`${API_BASE}/inventory/${id}`);
+        const data = await res.json();
+        renderTable([data]);
+    }
+
+    async function fetchByLocation() {
+        const loc = document.getElementById("locInput").value;
+        const res = await fetch(`${API_BASE}/inventory/${loc}`);
+        const data = await res.json();
+        renderTable(data);
+    }
+
+    async function deleteItem() {
+        const id = document.getElementById("deleteId").value;
+        const res = await fetch(`${API_BASE}/inventory/${id}`, { method: "DELETE" });
+        alert(await res.text());
+        fetchAll();
+    }
+
+    async function addItem() {
+        const item = {
+            location_id: document.getElementById("addLoc").value,
+            name: document.getElementById("addName").value,
+            description: document.getElementById("addDesc").value,
+            qty: Number(document.getElementById("addQty").value),
+            price: Number(document.getElementById("addPrice").value)
+        };
+
+        const res = await fetch(`${API_BASE}/inventory`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(item)
+        });
+
+        alert(await res.text());
+        fetchAll();
+    }
+
+    function renderTable(data) {
+        let html = `
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Location</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                </tr>
+        `;
+
+        data.forEach(item => {
+            html += `
+                <tr>
+                    <td>${item._id?.S || item._id}</td>
+                    <td>${item.location_id?.S || item.location_id}</td>
+                    <td>${item.name?.S || item.name}</td>
+                    <td>${item.description?.S || item.description}</td>
+                    <td>${item.qty?.N || item.qty}</td>
+                    <td>${item.price?.N || item.price}</td>
+                </tr>
+            `;
+        });
+
+        html += "</table>";
+
+        document.getElementById("output").innerHTML = html;
+    }
+</script>
+
+<div class="section">
+    <h2>Get All Inventory Items</h2>
+    <button onclick="fetchAll()">Load All</button>
+</div>
+
+<div class="section">
+    <h2>Get Item By ID</h2>
+    <input id="idInput" placeholder="Enter ID">
+    <button onclick="fetchById()">Search</button>
+</div>
+
+<div class="section">
+    <h2>Get Items by Location</h2>
+    <input id="locInput" placeholder="Enter location_id">
+    <button onclick="fetchByLocation()">Search</button>
+</div>
+
+<div class="section">
+    <h2>Add New Item</h2>
+    <input id="addLoc" placeholder="location_id">
+    <input id="addName" placeholder="name">
+    <input id="addDesc" placeholder="description">
+    <input id="addQty" placeholder="qty">
+    <input id="addPrice" placeholder="price">
+    <button onclick="addItem()">Add</button>
+</div>
+
+<div class="section">
+    <h2>Delete Item</h2>
+    <input id="deleteId" placeholder="Enter ID">
+    <button onclick="deleteItem()">Delete</button>
+</div>
+
+<h2>Output_2</h2>
+<div id="output"></div>
+
+</body>
+</html>
