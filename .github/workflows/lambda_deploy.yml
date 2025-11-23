@@ -31,7 +31,9 @@ jobs:
           ls -R
 
       - name: Build SAM application
-        run: sam build
+        working-directory: sam-inventory
+        run: sam build --use-container
 
       - name: Deploy SAM application
-        run: sam deploy --no-confirm-changeset --stack-name InventoryApp --region ca-central-1
+        working-directory: sam-inventory
+        run: sam deploy --no-confirm-changeset --stack-name sam-inventory --capabilities CAPABILITY_IAM
