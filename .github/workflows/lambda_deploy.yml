@@ -31,7 +31,7 @@ jobs:
           ls -R
 
       - name: Build SAM application
-        run: sam build --use-container --template-file sam-inventory/template.yaml
+        run: sam build
 
       - name: Deploy SAM application
-        run: sam deploy --template-file sam-inventory/.aws-sam/build/template.yaml --no-confirm-changeset --stack-name sam-inventory --capabilities CAPABILITY_IAM
+        run: sam deploy --no-confirm-changeset --stack-name InventoryApp --region ca-central-1
