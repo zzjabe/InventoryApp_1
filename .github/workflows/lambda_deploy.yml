@@ -25,11 +25,6 @@ jobs:
         run: |
           pip install aws-sam-cli
 
-      - name: List repository files
-        run: |
-          pwd
-          ls -R
-
       - name: Build SAM application
         working-directory: sam-inventory
         run: sam build --use-container
